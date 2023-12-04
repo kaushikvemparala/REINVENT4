@@ -240,12 +240,12 @@ tomli==2.0.1
     # via
     #   pytest
     #   reinvent (pyproject.toml)
-torch==1.12.1+cu113
+torch==1.12.1
     # via
     #   chemprop
     #   reinvent (pyproject.toml)
     #   torchvision
-torchvision==0.13.1+cu113
+torchvision==0.13.1
     # via reinvent (pyproject.toml)
 tqdm==4.65.0
     # via
