@@ -9,7 +9,7 @@
 
 
 run_type = "staged_learning"
-use_cuda = true  # run on the GPU if true, on the CPU if false
+use_cuda = false  # run on the GPU if true, on the CPU if false
 tb_logdir = "tb_logs"  # name of the TensorBoard logging directory
 json_out_config = "_staged_learning.json"  # write this TOML to JSON
 
@@ -160,7 +160,7 @@ max_steps = 100
 
 [stage.scoring]  # the scoring components can be read from a score file
 type = "geometric_mean"  # aggregation function
-filename = "stage2_scoring.toml"  # file with scoring setup for this stage
+filename = "configs/toml/stage2_scoring.toml"  # file with scoring setup for this stage
 filetype = "toml"  # file format: TOML or JSON, no default, must be present
 
 
