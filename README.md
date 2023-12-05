@@ -40,6 +40,7 @@ Installation
     ```shell
     conda create --name reinvent4 python=3.10
     conda activate reinvent4
+    conda install -c openeye openeye-toolkits
     ```
 3. Change directory into the repository and install the dependencies from the lockfile:
     ```shell
