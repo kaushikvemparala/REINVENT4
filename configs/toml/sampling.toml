@@ -17,18 +17,18 @@ json_out_config = "_sampling.json"  # write this TOML to JSON
 
 ## LibInvent: find R-groups for the given scaffolds
 #model_file = "priors/libinvent.prior"
-#smiles_file = "configs/toml/scaffolds.smi"  # 1 scaffold per line with attachment points
+#smiles_file = "config/toml/scaffolds.smi"  # 1 scaffold per line with attachment points
 
 ## LinkInvent: find a linker/scaffold to link two fragments
 #model_file = "priors/linkinvent.prior"
-#smiles_file = "configs/toml/warheads.smi"  # 2 warheads per line separated with '|'
+#smiles_file = "config/toml/warheads.smi"  # 2 warheads per line separated with '|'
 
 ## Mol2Mol: find molecules similar to the provided molecules
-model_file = "priors/mol2mol_medium_similarity.prior"
-smiles_file = "configs/toml/mol2mol.smi"  # 1 compound per line
-sample_strategy = "beamsearch"  # multinomial or beamsearch (deterministic)
-temperature = 1.0 # temperature in multinomial sampling
-tb_logdir = "tb_logs"  # name of the TensorBoard logging directory
+#model_file = "priors/mol2mol_medium_similarity.prior"
+#smiles_file = "config/toml/mol2mol.smi"  # 1 compound per line
+#sample_strategy = "beamsearch"  # multinomial or beamsearch (deterministic)
+#temperature = 1.0 # temperature in multinomial sampling
+#tb_logdir = "tb_logs"  # name of the TensorBoard logging directory
 
 output_file = 'sampling.csv'  # sampled SMILES and NLL in CSV format
 
