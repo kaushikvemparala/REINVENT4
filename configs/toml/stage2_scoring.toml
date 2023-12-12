@@ -1,7 +1,7 @@
 ### Stage 2 scoring components
-[[component]]
-[component.QED]
+[[component]] 
+[component.numsp] # This is the specific scoring function to be used
 
-[[component.QED.endpoint]]
-weight = 0.5  # user chosen name for output
-name = "QED Score"  # weight to fine-tune the relevance of this component
+[[component.numsp.endpoint]]
+# weight = 0.5  # weight to fine-tune the relevance of this component
+name = "numsp Score" # user chosen name for output 

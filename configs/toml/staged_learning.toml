@@ -44,7 +44,7 @@ agent_file = "priors/reinvent.prior"
 #sample_strategy = "multinomial"  # multinomial or beamsearch (deterministic)
 #distance_threshold = 100
 
-batch_size = 64          # network
+batch_size = 10        # network, changed from 64. Would want to make a new batch_size for sampling only
 
 unique_sequences = true  # if true remove all duplicates raw sequences in each step
                          # only here for backward compatibility
@@ -85,8 +85,8 @@ chkpt_file = 'test1.chkpt'  # name of the checkpoint file, can be reused as agen
 
 termination = "simple"  # termination criterion fot this stage
 max_score = 0.6  # terminate if this total score is exceeded
-min_steps = 25  # run for at least this number of steps
-max_steps = 100  # terminate entire run when exceeded
+min_steps = 10  # run for at least this number of steps
+max_steps = 20  # terminate entire run when exceeded
 
 [stage.scoring]
 type = "geometric_mean"  # aggregation function
@@ -156,7 +156,7 @@ chkpt_file = 'test2.chkpt'
 termination = "simple"
 max_score = 0.7
 min_steps = 10
-max_steps = 100
+max_steps = 20
 
 [stage.scoring]  # the scoring components can be read from a score file
 type = "geometric_mean"  # aggregation function

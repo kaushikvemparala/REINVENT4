@@ -6,6 +6,7 @@ import logging
 from typing import List, TYPE_CHECKING
 
 import torch
+import numpy as np
 
 from reinvent import config_parse, setup_logger, CsvFormatter
 from reinvent.runmodes import Handler, RL, create_adapter
@@ -15,6 +16,7 @@ from reinvent.runmodes.RL import terminators, memories
 from reinvent.runmodes.RL.data_classes import WorkPackage, ModelState
 from reinvent.runmodes.utils import disable_gradients
 from reinvent.scoring import Scorer
+from reinvent.scoring.compute_scores import compute_component_scores
 from reinvent.chemistry import Conversions
 from reinvent.chemistry.library_design import (
     BondMaker,
@@ -170,6 +172,7 @@ def create_packages(reward_strategy: RL.RLReward, stages: list) -> List[WorkPack
     :return: a list of work packages
     """
     packages = []
+    logger.info(f"stages from config: {stages}")
 
     for stage in stages:
         chkpt_filename = stage["chkpt_file"]
@@ -203,6 +206,47 @@ def create_packages(reward_strategy: RL.RLReward, stages: list) -> List[WorkPack
 
     return packages
 
+def select_next_stage(packages: List[WorkPackage], sampler):
+    scores_to_index = {}
+    
+    # Catch this during implementation.
+    if len(packages) == 0: 
+        return ([], [])
+    
+    # 1) Sample the SMILES using the sampler.
+    smiles_list = sampler.sample("").smilies
+
+    logger.info(f"SMILES list: {smiles_list}")
+
+    invalid_mask = duplicate_mask = np.array([True] * 10) # Make 10 into params[batch_size]
+
+    # 2) Score the sampled SMILES with the scoring modules in the packages.
+    for i, package in enumerate(packages):
+        scoring_fn = package.scoring_function
+        total_scores = scoring_fn.compute_results(smiles_list, invalid_mask, duplicate_mask).total_scores
+        average_score = sum(total_scores) / len(total_scores)
+        scores_to_index[i] = average_score
+        logger.info(f"scores: {average_score}")
+    # 3) Choose the highest-scoring module as the next package.
+    highest_index = max(zip(scores_to_index.values(), scores_to_index.keys()))[1]
+    next_package = packages[highest_index]
+    packages.pop(highest_index)
+    
+    return next_package, packages
+
+
+
+    # First step: Sample some SMILES from the agent (passed in) using the sampler thing
+    
+    # Method: load model from random checkpoint file, sample 50 random smiles (hyperparam), calculate mean score to get highest 
+    
+    # This logic was for passing in a checkpoint path:
+    # adapter, agent_save_dict, agent_model_type = create_adapter(chkpt_path, agent_mode='inference', device='cpu')
+    # agent = adapter
+
+    # return next_package, packages
+
+
 
 def run_staged_learning(
     config: dict,
@@ -228,6 +272,7 @@ def run_staged_learning(
     logger.info(
         f"Starting {num_stages} {'stages' if num_stages> 1 else 'stage'} of Reinforcement Learning"
     )
+    logger.info(f"device: {device}")
 
     parameters = config["parameters"]
 
@@ -270,7 +315,7 @@ def run_staged_learning(
 
     logger.info(f"Using generator {model_type}")
     logger.info(f"Prior read from {prior_model_filename}")
-    logger.info(f"Agent read from {agent_model_filename}")
+    logger.info(f"Agent read from {agent_model_filename, config}")
 
     try:
         smilies_filename = parameters["smiles_file"]
@@ -312,6 +357,7 @@ def run_staged_learning(
 
     state = ModelState(agent, diversity_filter)
     packages = create_packages(reward_strategy, stages)
+    logger.info(f"packages: {packages}")
 
     summary_csv_prefix = parameters.get("summary_csv_prefix", "summary")
 
@@ -320,8 +366,15 @@ def run_staged_learning(
 
     model_learning = getattr(RL, f"{model_type}Learning")
 
+    next_package, remaining_packages = select_next_stage(packages, sampler)
+    logger.info(f"remaining_packages: {remaining_packages}")
+
     with Handler() as handler:
-        for run, package in enumerate(packages):
+        run = 0
+        while next_package: # ALL 'PACKAGE' VARIABLES HAVE BEEN CHANGED TO 'NEXT_PACKAGE' HERE
+
+        # for run, package in enumerate(packages): This has a package ordering right now. We don't want to do that--instead, choose package.
+            logger.info(f"current package: {next_package}")
             stage_no = run + 1
             csv_filename = f"{summary_csv_prefix}_{stage_no}.csv"
 
@@ -339,11 +392,11 @@ def run_staged_learning(
             logger.info(f"Starting stage {stage_no} <<<")
 
             optimize = model_learning(
-                max_steps=package.max_steps,
+                max_steps=next_package.max_steps,
                 prior=prior,
                 state=state,
-                scoring_function=package.scoring_function,
-                reward_strategy=package.learning_strategy,
+                scoring_function=next_package.scoring_function,
+                reward_strategy=next_package.learning_strategy,
                 sampling_model=sampler,
                 smilies=smilies,
                 distance_threshold=distance_threshold,
@@ -360,21 +413,26 @@ def run_staged_learning(
                 used_memory = total_memory // 1024**2  - free_memory
                 logger.info(f"Current GPU memory usage: {used_memory} MiB used, {free_memory} MiB free")
 
-            handler.out_filename = package.out_state_filename
+            handler.out_filename = next_package.out_state_filename
             handler.register_callback(optimize.get_state_dict)
 
             if inception:
-                inception.update_scoring_function(package.scoring_function)
+                inception.update_scoring_function(next_package.scoring_function)
 
-            terminate = optimize(package.terminator)
+            terminate = optimize(next_package.terminator)
             state = optimize.state
             handler.save()
 
             if terminate:
                 logger.warning(
-                    f"Maximum number of steps of {package.max_steps} reached in stage "
+                    f"Maximum number of steps of {next_package.max_steps} reached in stage "
                     f"{stage_no}. Terminating all stages."
                 )
                 break
 
             logger.info(f"Finished stage {stage_no} >>>")
+
+            # Initialize sampler with newly trained agent. But may have to load from checkpoint first.
+            sampler, _ = setup_sampler(model_type, parameters, agent, chemistry)
+            logger.info(f"remaining_packages: {remaining_packages}")
+            next_package, remaining_packages = select_next_stage(remaining_packages, sampler)

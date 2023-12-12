@@ -32,7 +32,7 @@ def setup_sampler(model_type: str, config: dict, agent: ModelAdapter, chemistry:
 
     # number of smiles to be generated for each input;
     # different from batch size used in dataloader which affect cuda memory
-    batch_size = config.get("batch_size", 100)
+    batch_size = config.get("batch_size", 100) # What does this one refer to?
     randomize_smiles = config.get("randomize_smiles", True)
     temperature = config.get("temperature", 1.0)
 

@@ -13,7 +13,7 @@ json_out_config = "_sampling.json"  # write this TOML to JSON
 # file and possibly a SMILES file with seed structures.
 
 ## Reinvent: de novo sampling
-#model_file = "priors/reinvent.prior"
+model_file = "priors/reinvent.prior"
 
 ## LibInvent: find R-groups for the given scaffolds
 #model_file = "priors/libinvent.prior"
@@ -32,6 +32,6 @@ json_out_config = "_sampling.json"  # write this TOML to JSON
 
 output_file = 'sampling.csv'  # sampled SMILES and NLL in CSV format
 
-num_smiles = 157  # number of SMILES to be sampled, 1 per input SMILES
+num_smiles = 100  # number of SMILES to be sampled, 1 per input SMILES. POTENTIAL HYPERPARAM
 unique_molecules = true  # if true remove all duplicatesd canonicalize smiles
 randomize_smiles = true # if true shuffle atoms in SMILES randomly
