@@ -97,7 +97,7 @@ type = "geometric_mean"  # aggregation function
 
 [[stage.scoring.component.custom_alerts.endpoint]]
 name = "Unwanted SMARTS"  # user chosen name for output
-weight = 0.79  # weight to fine-tune the relevance of this component
+weight = 1  # weight to fine-tune the relevance of this component
 
 # parameters for the component:
 # a list of unwanted SMARTS(!) to be scored as zero

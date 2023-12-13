@@ -49,6 +49,8 @@ def dap_strategy(
     augmented_lls = prior_lls + sigma * scores
     loss = torch.pow((augmented_lls - agent_lls), 2)
 
+    logger.info(f"sigma: {sigma}, prior_lls: {prior_lls}")
+
     return loss, augmented_lls
 
 

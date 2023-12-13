@@ -14,4 +14,4 @@ mprofile_*.dat
 /reinvent.egg-info/*
 /reinvent.egg-info/dependency_links.txt
 /build/
-/tb_logs*
+/tb_logs_*

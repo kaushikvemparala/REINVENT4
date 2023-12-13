@@ -39,7 +39,7 @@
                             "endpoint": [
                                 {
                                     "name": "Unwanted SMARTS",
-                                    "weight": 0.79,
+                                    "weight": 1,
                                     "params": {
                                         "smarts": [
                                             "[*;r8]",

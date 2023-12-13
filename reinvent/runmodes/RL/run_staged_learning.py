@@ -7,6 +7,7 @@ from typing import List, TYPE_CHECKING
 
 import torch
 import numpy as np
+import datetime
 
 from reinvent import config_parse, setup_logger, CsvFormatter
 from reinvent.runmodes import Handler, RL, create_adapter
@@ -213,12 +214,15 @@ def select_next_stage(packages: List[WorkPackage], sampler):
     if len(packages) == 0: 
         return ([], [])
     
+    if len(packages) == 1:
+        return (packages[0], [])
+    
     # 1) Sample the SMILES using the sampler.
     smiles_list = sampler.sample("").smilies
 
     logger.info(f"SMILES list: {smiles_list}")
 
-    invalid_mask = duplicate_mask = np.array([True] * 10) # Make 10 into params[batch_size]
+    invalid_mask = duplicate_mask = np.array([False] * 10) # Make 10 into params[batch_size]
 
     # 2) Score the sampled SMILES with the scoring modules in the packages.
     for i, package in enumerate(packages):
@@ -227,6 +231,7 @@ def select_next_stage(packages: List[WorkPackage], sampler):
         average_score = sum(total_scores) / len(total_scores)
         scores_to_index[i] = average_score
         logger.info(f"scores: {average_score}")
+    
     # 3) Choose the highest-scoring module as the next package.
     highest_index = max(zip(scores_to_index.values(), scores_to_index.keys()))[1]
     next_package = packages[highest_index]
@@ -367,15 +372,17 @@ def run_staged_learning(
     model_learning = getattr(RL, f"{model_type}Learning")
 
     next_package, remaining_packages = select_next_stage(packages, sampler)
-    logger.info(f"remaining_packages: {remaining_packages}")
+    log_name = datetime.datetime.now()
 
     with Handler() as handler:
-        run = 0
+        run = 1
         while next_package: # ALL 'PACKAGE' VARIABLES HAVE BEEN CHANGED TO 'NEXT_PACKAGE' HERE
 
         # for run, package in enumerate(packages): This has a package ordering right now. We don't want to do that--instead, choose package.
             logger.info(f"current package: {next_package}")
-            stage_no = run + 1
+            score_name = next_package.scoring_function.components.scorers[0].component_type
+            #score = next_package.scoring_function
+            stage_no = run 
             csv_filename = f"{summary_csv_prefix}_{stage_no}.csv"
 
             setup_logger(
@@ -386,7 +393,7 @@ def run_staged_learning(
                 level="INFO",
             )
 
-            logdir = f"{tb_logdir}_{run}" if tb_logdir else None
+            logdir = f"{tb_logdir}/{log_name}/{run}_{score_name}" if tb_logdir else None
 
             logger.info(f"Writing tabular data for stage to {csv_filename}")
             logger.info(f"Starting stage {stage_no} <<<")
@@ -423,16 +430,29 @@ def run_staged_learning(
             state = optimize.state
             handler.save()
 
+            logger.info(f"terminated: {terminate}")
+
             if terminate:
                 logger.warning(
                     f"Maximum number of steps of {next_package.max_steps} reached in stage "
                     f"{stage_no}. Terminating all stages."
                 )
-                break
+
+                # if remaining_packages:
+                #     sampler, _ = setup_sampler(model_type, parameters, agent, chemistry)
+                #     next_package, remaining_packages = select_next_stage(remaining_packages, sampler)
+                #     logger.info(f"bext_packages scoring: {next_package.scoring_function.components.scorers[0].component_type}")
+                #break
 
             logger.info(f"Finished stage {stage_no} >>>")
 
             # Initialize sampler with newly trained agent. But may have to load from checkpoint first.
-            sampler, _ = setup_sampler(model_type, parameters, agent, chemistry)
-            logger.info(f"remaining_packages: {remaining_packages}")
-            next_package, remaining_packages = select_next_stage(remaining_packages, sampler)
+            if remaining_packages:
+                logger.info(f"remaining packages: {remaining_packages}")
+                sampler, _ = setup_sampler(model_type, parameters, agent, chemistry)
+                next_package, remaining_packages = select_next_stage(remaining_packages, sampler)
+                logger.info(f"bext_packages scoring: {next_package.scoring_function.components.scorers[0].component_type}")
+                run += 1
+
+            else:
+                break
