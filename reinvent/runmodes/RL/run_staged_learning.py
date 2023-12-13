@@ -222,7 +222,7 @@ def select_next_stage(packages: List[WorkPackage], sampler):
 
     logger.info(f"SMILES list: {smiles_list}")
 
-    invalid_mask = duplicate_mask = np.array([False] * 10) # Make 10 into params[batch_size]
+    invalid_mask = duplicate_mask = np.array([False] * 64) # Make 10 into params[batch_size]
 
     # 2) Score the sampled SMILES with the scoring modules in the packages.
     for i, package in enumerate(packages):
@@ -380,7 +380,7 @@ def run_staged_learning(
 
         # for run, package in enumerate(packages): This has a package ordering right now. We don't want to do that--instead, choose package.
             logger.info(f"current package: {next_package}")
-            score_name = next_package.scoring_function.components.scorers[0].component_type
+            #score_name = next_package.scoring_function.components.scorers[0].component_type
             #score = next_package.scoring_function
             stage_no = run 
             csv_filename = f"{summary_csv_prefix}_{stage_no}.csv"
@@ -393,7 +393,8 @@ def run_staged_learning(
                 level="INFO",
             )
 
-            logdir = f"{tb_logdir}/{log_name}/{run}_{score_name}" if tb_logdir else None
+            #logdir = f"{tb_logdir}/{log_name}/{run}_{score_name}" if tb_logdir else None
+            logdir = f"{tb_logdir}/{log_name}/{run}_substructtest" if tb_logdir else None
 
             logger.info(f"Writing tabular data for stage to {csv_filename}")
             logger.info(f"Starting stage {stage_no} <<<")

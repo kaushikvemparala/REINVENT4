@@ -1,0 +1,7 @@
+### SLogP Scoring Components
+[[component]] 
+[component.SLogP] # This is the specific scoring function to be used
+
+[[component.SLogP.endpoint]]
+name = "SLogP Score" # user chosen name for output 
+weight = 1

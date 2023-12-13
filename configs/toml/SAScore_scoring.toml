@@ -1,0 +1,7 @@
+### Synthesis Scoring Components
+[[component]] 
+[component.SAScore] # This is the specific scoring function to be used
+
+[[component.SAScore.endpoint]]
+name = "Synthesis Score" # user chosen name for output 
+weight = 1

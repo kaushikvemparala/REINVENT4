@@ -1,0 +1,7 @@
+### TPSA Scoring Components
+[[component]] 
+[component.TPSA] # This is the specific scoring function to be used
+
+[[component.TPSA.endpoint]]
+name = "TPSA Score" # user chosen name for output 
+weight = 1

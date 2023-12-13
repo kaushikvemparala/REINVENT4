@@ -1,0 +1,7 @@
+### QED Scoring components
+[[component]]
+[component.QED]
+
+[[component.QED.endpoint]]
+name = "QED Score"  # user chosen name for output
+weight = 1  # weight to fine-tune the relevance of this component

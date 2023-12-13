@@ -1,0 +1,9 @@
+### Small Ring Scoring Component. BUGGY
+[[component]] 
+[component.MatchingSubstructure] # This is the specific scoring function to be used
+
+[[component.MatchingSubstructure.endpoint]]
+name = "Matching Score" # user chosen name for output 
+weight = 1  # weight to fine-tune the relevance of this component
+params.smarts = "[c1ccccc1]"
+params.use_chirality = false

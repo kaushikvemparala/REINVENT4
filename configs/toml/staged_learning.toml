@@ -1,6 +1,3 @@
-# REINVENT4 TOML input example for reinforcement/curriculum learning
-#
-#
 # Curriculum learning in REINVENT4 is a multi-stage reinforcement learning
 # run.  One or more stages (auto CL) can be defined.  But it is also
 # possible to continue a run from any checkpoint file that is generated
@@ -15,10 +12,7 @@ json_out_config = "_staged_learning.json"  # write this TOML to JSON
 
 [parameters]
 
-# Uncomment one of the comment blocks below.  Each generator needs a model
-# file and possibly a SMILES file with seed structures.  If the run is to
-# be continued after termination, the agent_file would have to be replaced
-# with the checkpoint file.
+# If you want to continue run after termination, agent_file would have to be replaced with the checkpoint file.
 
 use_checkpoint = false  # if true read diversity filter from agent_file
 summary_csv_prefix = "staged_learning"  # prefix for the CSV file
@@ -27,24 +21,7 @@ summary_csv_prefix = "staged_learning"  # prefix for the CSV file
 prior_file = "priors/reinvent.prior"
 agent_file = "priors/reinvent.prior"
 
-## LibInvent
-#prior_file = "priors/libinvent.prior"
-#agent_file = "priors/libinvent.prior"
-#smiles_file = "scaffolds.smi"  # 1 scaffold per line with attachment points
-
-## LinkInvent
-#prior_file = "priors/linkinvent.prior"
-#agent_file = "priors/linkinvent.prior"
-#smiles_file = "warheads.smi"  # 2 warheads per line separated with '|'
-
-## Mol2Mol
-#prior_file = "priors/mol2mol_scaffold_generic.prior"
-#agent_file = "priors/mol2mol_scaffold_generic.prior"
-#smiles_file = "mol2mol.smi"  # 1 compound per line
-#sample_strategy = "multinomial"  # multinomial or beamsearch (deterministic)
-#distance_threshold = 100
-
-batch_size = 10        # network, changed from 64. Would want to make a new batch_size for sampling only
+batch_size = 64        # network, changed from 64. Would want to make a new batch_size for sampling only
 
 unique_sequences = true  # if true remove all duplicates raw sequences in each step
                          # only here for backward compatibility
@@ -65,85 +42,35 @@ type = "IdenticalMurckoScaffold" # IdenticalTopologicalScaffold,
                                  # ScaffoldSimilarity, PenalizeSameSmiles
 bucket_size = 25                 # memory size in number of compounds
 minscore = 0.4                   # only memorize if this threshold is exceeded
-minsimilarity = 0.4              # minimum similarity for ScaffoldSimilarity
-penalty_multiplier = 0.5         # penalty factor for PenalizeSameSmiles
+#minsimilarity = 0.4              # minimum similarity for ScaffoldSimilarity
+#penalty_multiplier = 0.5         # penalty factor for PenalizeSameSmiles
 
 
 # Reinvent only: guide RL in the initial phase
-#[inception]  # optional, comment sectionout or remove if unneeded
+[inception]  # optional, comment sectionout or remove if unneeded
 
 #smiles_file = "sampled.smi"  # "good" SMILES for guidance
-#memory_size = 100  # number of total SMILES held in memory
-#sample_size = 10  # number of SMILES randomly chosen each epoch
+smiles = []
+memory_size = 100  # number of total SMILES held in memory
+sample_size = 10  # number of SMILES randomly chosen each epoch
 
 
 ### Stage 1
 ### Note that stages must always be a list i.e. double brackets
 [[stage]]
 
-chkpt_file = 'test1.chkpt'  # name of the checkpoint file, can be reused as agent
+chkpt_file = 'mweight.chkpt'  # name of the checkpoint file, can be reused as agent
 
-termination = "simple"  # termination criterion fot this stage
-max_score = 0.6  # terminate if this total score is exceeded
-min_steps = 10  # run for at least this number of steps
-max_steps = 20  # terminate entire run when exceeded
+#termination = "simple"  # termination criterion fot this stage
+#max_score = 0.8  # terminate if this total score is exceeded
+#min_steps = 20  # run for at least this number of steps
+max_steps = 50  # terminate entire run when exceeded
 
 [stage.scoring]
 type = "geometric_mean"  # aggregation function
 
-[[stage.scoring.component]]
-# Custom alerts if used in a custom_product filter out unwanted groups
-[stage.scoring.component.custom_alerts]
-
-[[stage.scoring.component.custom_alerts.endpoint]]
-name = "Unwanted SMARTS"  # user chosen name for output
-weight = 1  # weight to fine-tune the relevance of this component
-
-# parameters for the component:
-# a list of unwanted SMARTS(!) to be scored as zero
-params.smarts = [
-    "[*;r8]",
-    "[*;r9]",
-    "[*;r10]",
-    "[*;r11]",
-    "[*;r12]",
-    "[*;r13]",
-    "[*;r14]",
-    "[*;r15]",
-    "[*;r16]",
-    "[*;r17]",
-    "[#8][#8]",
-    "[#6;+]",
-    "[#16][#16]",
-    "[#7;!n][S;!$(S(=O)=O)]",
-    "[#7;!n][#7;!n]",
-    "C#C",
-    "C(=[O,S])[O,S]",
-    "[#7;!n][C;!$(C(=[O,N])[N,O])][#16;!s]",
-    "[#7;!n][C;!$(C(=[O,N])[N,O])][#7;!n]",
-    "[#7;!n][C;!$(C(=[O,N])[N,O])][#8;!o]",
-    "[#8;!o][C;!$(C(=[O,N])[N,O])][#16;!s]",
-    "[#8;!o][C;!$(C(=[O,N])[N,O])][#8;!o]",
-    "[#16;!s][C;!$(C(=[O,N])[N,O])][#16;!s]"
-]
-
-[[stage.scoring.component]]
-[stage.scoring.component.MolecularWeight]
-
-[[stage.scoring.component.MolecularWeight.endpoint]]
-name = "Molecular weight"  # user chosen name for output
-weight = 0.342  # weight to fine-tune the relevance of this component
-
-# A transform ensures that the output from the scoring component ranges
-# from 0 to 1 to serve as a proper score.  Here we use a double sigmoid
-# to transform weights into the range 200-500 a.u.
-transform.type = "double_sigmoid"
-transform.high = 500.0
-transform.low = 200.0
-transform.coef_div = 500.0
-transform.coef_si = 20.0
-transform.coef_se = 20.0
-
+filename = "configs/toml/MWeight_scoring.toml"  # file with scoring setup for this stage
+filetype = "toml"  # file format: TOML or JSON, no default, must be present
 
 ### Stage 2
 # Alternatively only the first stage above can be run and the new input file
@@ -151,18 +78,60 @@ transform.coef_se = 20.0
 
 [[stage]]
 
-chkpt_file = 'test2.chkpt'
+chkpt_file = 'slogp.chkpt'
 
-termination = "simple"
-max_score = 0.7
-min_steps = 10
-max_steps = 20
+#termination = "simple"  # termination criterion fot this stage
+#max_score = 0.8  # terminate if this total score is exceeded
+#min_steps = 20  # run for at least this number of steps
+max_steps = 50  # terminate entire run when exceeded
 
 [stage.scoring]  # the scoring components can be read from a score file
 type = "geometric_mean"  # aggregation function
-filename = "configs/toml/stage2_scoring.toml"  # file with scoring setup for this stage
+filename = "configs/toml/SLogP_scoring.toml"  # file with scoring setup for this stage
 filetype = "toml"  # file format: TOML or JSON, no default, must be present
 
 
 ### Stage 3
-# just as above
+[[stage]]
+
+chkpt_file = 'hbondinfo.chkpt'
+
+#termination = "simple"  # termination criterion fot this stage
+#max_score = 0.8  # terminate if this total score is exceeded
+#min_steps = 20  # run for at least this number of steps
+max_steps = 50  # terminate entire run when exceeded
+
+[stage.scoring]  # the scoring components can be read from a score file
+type = "geometric_mean"  # aggregation function
+filename = "configs/toml/HBondInfo_scoring.toml"  # file with scoring setup for this stage
+filetype = "toml"  # file format: TOML or JSON, no default, must be present
+
+### Stage 4
+[[stage]]
+
+chkpt_file = 'qed.chkpt'
+
+#termination = "simple"  # termination criterion fot this stage
+#max_score = 0.8  # terminate if this total score is exceeded
+#min_steps = 20  # run for at least this number of steps
+max_steps = 50  # terminate entire run when exceeded
+
+[stage.scoring]  # the scoring components can be read from a score file
+type = "geometric_mean"  # aggregation function
+filename = "configs/toml/QED_scoring.toml"  # file with scoring setup for this stage
+filetype = "toml"  # file format: TOML or JSON, no default, must be present
+
+### Stage 5
+[[stage]]
+
+chkpt_file = 'sascore.chkpt'
+
+#termination = "simple"  # termination criterion fot this stage
+#max_score = 0.8  # terminate if this total score is exceeded
+#min_steps = 20  # run for at least this number of steps
+max_steps = 50  # terminate entire run when exceeded
+
+[stage.scoring]  # the scoring components can be read from a score file
+type = "geometric_mean"  # aggregation function
+filename = "configs/toml/SAScore_scoring.toml"  # file with scoring setup for this stage
+filetype = "toml"  # file format: TOML or JSON, no default, must be present

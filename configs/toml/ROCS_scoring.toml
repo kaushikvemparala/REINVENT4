@@ -1,0 +1,14 @@
+### ROCS Scoring Components. CAN'T USE OPENEYE WITHOUT LICENSE
+[[component]] 
+[component.ROCSSimilarity] # This is the specific scoring function to be used
+
+[[component.ROCSSimilarity.endpoint]]
+name = "ROCS Similarity Score" # user chosen name for output 
+weight = 1
+params.color_weight = 0.5
+params.shape_weight = 0.5
+params.similarity_measure = "Tanimoto"
+params.max_stereocenters = 4
+params.ewindow = 10
+params.maxconfs = 200
+params.rocs_input = ""

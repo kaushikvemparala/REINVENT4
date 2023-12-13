@@ -1,0 +1,12 @@
+[[component]]
+[component.TanimotoDistance]
+
+[[component.TanimotoDistance.endpoint]]
+name = "Tanimoto similarity ECF6"
+weight = 0.1
+
+# component specific parameters
+params.smiles = ["n1(nc(c(c1C)-c2n[nH]c(c2)[C@@]3([C@@H](CN(CC3)Cc4nc5c(c(n4)C)cccc5)O)OC)C)C"]
+params.radius = 3
+params.use_counts = true
+params.use_features = true
